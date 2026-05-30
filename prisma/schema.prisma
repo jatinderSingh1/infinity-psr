@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(RECRUITER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  RECRUITER
+}
+
+model Client {
+  id          String       @id @default(cuid())
+  name        String
+  industry    String
+  contactName String
+  email       String
+  phone       String?
+  website     String?
+  notes       String?
+  status      ClientStatus @default(ACTIVE)
+  jobOrders   JobOrder[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  PROSPECT
+}
+
+model Candidate {
+  id              String        @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String        @unique
+  phone           String?
+  currentTitle    String?
+  currentCompany  String?
+  industry        String?
+  skills          String[]
+  resumeUrl       String?
+  linkedinUrl     String?
+  notes           String?
+  applications    Application[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model JobOrder {
+  id           String        @id @default(cuid())
+  title        String
+  client       Client        @relation(fields: [clientId], references: [id])
+  clientId     String
+  description  String?
+  requirements String[]
+  salary       String?
+  location     String?
+  status       JobStatus     @default(OPEN)
+  applications Application[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+enum JobStatus {
+  OPEN
+  ON_HOLD
+  FILLED
+  CANCELLED
+}
+
+model Application {
+  id          String           @id @default(cuid())
+  candidate   Candidate        @relation(fields: [candidateId], references: [id])
+  candidateId String
+  jobOrder    JobOrder         @relation(fields: [jobOrderId], references: [id])
+  jobOrderId  String
+  stage       ApplicationStage @default(APPLIED)
+  notes       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([candidateId, jobOrderId])
+}
+
+enum ApplicationStage {
+  APPLIED
+  SCREENED
+  INTERVIEWED
+  OFFER_SENT
+  PLACED
+  REJECTED
+}

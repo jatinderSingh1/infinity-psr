@@ -1,14 +1,7 @@
-import "dotenv/config";
-import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({
-    connectionString:
-      "postgresql://postgres.pvxaksjuzwveyileijgw:baqnuj-Gadwa3-tucjit@aws-1-ca-central-1.pooler.supabase.com:5432/postgres",
-  }),
-});
+const prisma = new PrismaClient();
 
 async function main() {
   const password = await bcrypt.hash("admin123", 10);
@@ -24,7 +17,7 @@ async function main() {
     },
   });
 
-  console.log("Seeded admin user: admin@infinitypsr.com / admin123");
+  console.log("Seeded: admin@infinitypsr.com / admin123");
 }
 
 main()

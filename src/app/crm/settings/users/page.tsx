@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { AddUserForm } from "@/components/crm/AddUserForm";
 
 export default async function UsersPage() {
   const session = await auth();
@@ -15,9 +16,12 @@ export default async function UsersPage() {
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900">Users</h1>
-        <p className="text-zinc-500 text-sm mt-0.5">{users.length} team member{users.length !== 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900">Users</h1>
+          <p className="text-zinc-500 text-sm mt-0.5">{users.length} team member{users.length !== 1 ? "s" : ""}</p>
+        </div>
+        <AddUserForm />
       </div>
 
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm divide-y divide-zinc-50">
@@ -49,11 +53,6 @@ export default async function UsersPage() {
             </p>
           </div>
         ))}
-      </div>
-
-      <div className="mt-6 p-4 bg-zinc-50 rounded-xl border border-zinc-200 text-sm text-zinc-500">
-        <p className="font-medium text-zinc-700 mb-1">To add new users:</p>
-        <p>Run <code className="bg-zinc-100 px-1.5 py-0.5 rounded text-xs">npm run db:seed</code> to create admin, or use Prisma Studio (<code className="bg-zinc-100 px-1.5 py-0.5 rounded text-xs">npm run db:studio</code>) to add users directly.</p>
       </div>
     </div>
   );

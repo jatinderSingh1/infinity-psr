@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { asArr } from "@/lib/utils";
 
 export default async function CandidatesPage() {
   const candidates = await prisma.candidate.findMany({
@@ -57,11 +58,11 @@ export default async function CandidatesPage() {
                   <td className="px-6 py-3 text-zinc-600">{c.industry ?? "—"}</td>
                   <td className="px-6 py-3">
                     <div className="flex gap-1 flex-wrap">
-                      {c.skills.slice(0, 3).map((s) => (
+                      {asArr(c.skills).slice(0, 3).map((s) => (
                         <span key={s} className="bg-zinc-100 text-zinc-600 text-xs px-2 py-0.5 rounded-full">{s}</span>
                       ))}
-                      {c.skills.length > 3 && (
-                        <span className="text-zinc-400 text-xs">+{c.skills.length - 3}</span>
+                      {asArr(c.skills).length > 3 && (
+                        <span className="text-zinc-400 text-xs">+{asArr(c.skills).length - 3}</span>
                       )}
                     </div>
                   </td>

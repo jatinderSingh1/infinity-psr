@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { arrWrite } from "@/lib/utils";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   }
 
   const candidate = await prisma.candidate.create({
-    data: { firstName, lastName, email, phone, currentTitle, currentCompany, industry, skills: skills ?? [], resumeUrl, linkedinUrl, notes },
+    data: { firstName, lastName, email, phone, currentTitle, currentCompany, industry, skills: arrWrite(skills ?? []), resumeUrl, linkedinUrl, notes },
   });
 
   return NextResponse.json(candidate, { status: 201 });

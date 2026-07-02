@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { arrWrite } from "@/lib/utils";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
   }
 
   const job = await prisma.jobOrder.create({
-    data: { title, clientId, description, requirements: requirements ?? [], salary, location, status },
+    data: { title, clientId, description, requirements: arrWrite(requirements ?? []), salary, location, status },
   });
 
   return NextResponse.json(job, { status: 201 });

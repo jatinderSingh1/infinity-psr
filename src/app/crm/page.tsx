@@ -1,102 +1,232 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { asArr } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [clients, candidates, jobs, placements] = await Promise.all([
-    prisma.client.count(),
-    prisma.candidate.count(),
-    prisma.jobOrder.count({ where: { status: "OPEN" } }),
-    prisma.application.count({ where: { stage: "PLACED" } }),
+  const [totalContacts, totalDeals, activeDeals, wonDeals] = await Promise.all([
+    prisma.contact.count(),
+    prisma.deal.count(),
+    prisma.deal.count({ where: { stage: { notIn: ["WON", "LOST"] } } }),
+    prisma.deal.count({ where: { stage: "WON" } }),
   ]);
 
-  const stats = [
-    { label: "Total Clients", value: clients, color: "bg-blue-50 border-blue-100", text: "text-blue-700" },
-    { label: "Candidates", value: candidates, color: "bg-violet-50 border-violet-100", text: "text-violet-700" },
-    { label: "Open Roles", value: jobs, color: "bg-amber-50 border-amber-100", text: "text-amber-700" },
-    { label: "Placements", value: placements, color: "bg-green-50 border-green-100", text: "text-green-700" },
-  ];
-
-  const recentJobs = await prisma.jobOrder.findMany({
-    take: 5,
-    orderBy: { createdAt: "desc" },
-    include: { client: true, _count: { select: { applications: true } } },
+  const industries = await prisma.industry.findMany({
+    where: { isActive: true },
+    orderBy: { order: "asc" },
+    include: { _count: { select: { roles: true } } },
   });
 
-  const statusColor: Record<string, string> = {
-    OPEN: "bg-green-100 text-green-700",
-    ON_HOLD: "bg-amber-100 text-amber-700",
-    FILLED: "bg-blue-100 text-blue-700",
-    CANCELLED: "bg-red-100 text-red-700",
+  const recentContacts = await prisma.contact.findMany({
+    take: 6,
+    orderBy: { createdAt: "desc" },
+    include: { roles: { include: { industry: true, contactType: true }, take: 2 } },
+  });
+
+  const recentActivities = await prisma.activity.findMany({
+    take: 5,
+    orderBy: { createdAt: "desc" },
+    include: { contact: { select: { firstName: true, lastName: true } } },
+  });
+
+  const wonDealsValue = await prisma.deal.aggregate({
+    where: { stage: "WON" },
+    _sum: { value: true },
+  });
+
+  const stats = [
+    { label: "Total Contacts", value: totalContacts, icon: "👥", color: "#4f46e5" },
+    { label: "Active Deals", value: activeDeals, icon: "🔄", color: "#059669" },
+    { label: "Deals Won", value: wonDeals, icon: "✅", color: "#d97706" },
+    { label: "Total Deals", value: totalDeals, icon: "📊", color: "#dc2626" },
+  ];
+
+  const activityIcons: Record<string, string> = {
+    NOTE: "📝",
+    CALL: "📞",
+    EMAIL: "✉️",
+    MEETING: "🤝",
+    TASK: "✔️",
+  };
+
+  const statusColors: Record<string, string> = {
+    ACTIVE: "#059669",
+    INACTIVE: "#6b7280",
+    LEAD: "#4f46e5",
+    PROSPECT: "#d97706",
   };
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-zinc-900 mb-1">Dashboard</h1>
-        <p className="text-zinc-500 text-sm">Welcome back</p>
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-zinc-900">Dashboard</h1>
+          <p className="text-zinc-500 text-sm mt-0.5">Welcome back — here's what's happening</p>
+        </div>
+        <div className="flex gap-2">
+          <Link
+            href="/crm/contacts/new"
+            className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors"
+          >
+            + Add Contact
+          </Link>
+          <Link
+            href="/crm/pipeline"
+            className="border border-zinc-200 bg-white text-zinc-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors"
+          >
+            View Pipeline
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((s) => (
-          <div key={s.label} className={`rounded-xl border ${s.color} p-5`}>
-            <p className={`text-3xl font-bold ${s.text}`}>{s.value}</p>
-            <p className="text-sm text-zinc-600 mt-1 font-medium">{s.label}</p>
+          <div key={s.label} className="bg-white rounded-xl border border-zinc-200 p-5 shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">{s.icon}</span>
+              <p className="text-xs text-zinc-500 font-medium">{s.label}</p>
+            </div>
+            <p className="text-3xl font-bold text-zinc-900">{s.value}</p>
           </div>
         ))}
       </div>
 
-      {/* Quick actions */}
-      <div className="flex gap-3 mb-8 flex-wrap">
-        <Link href="/crm/clients/new" className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors">
-          + New Client
-        </Link>
-        <Link href="/crm/candidates/new" className="bg-white border border-zinc-200 text-zinc-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-          + New Candidate
-        </Link>
-        <Link href="/crm/jobs/new" className="bg-white border border-zinc-200 text-zinc-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors">
-          + New Job Order
-        </Link>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Industries breakdown */}
+        <div className="lg:col-span-2 bg-white rounded-xl border border-zinc-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+            <h2 className="font-semibold text-zinc-900">Industries</h2>
+            <Link href="/crm/settings/industries" className="text-xs text-zinc-400 hover:text-zinc-900">
+              Manage →
+            </Link>
+          </div>
+          <div className="p-4 grid grid-cols-2 gap-2">
+            {industries.map((ind) => (
+              <Link
+                key={ind.id}
+                href={`/crm/industries/${ind.slug}`}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-50 transition-colors border border-zinc-100"
+              >
+                <span
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+                  style={{ backgroundColor: ind.color ? ind.color + "20" : "#f4f4f5" }}
+                >
+                  {ind.icon ?? "📁"}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-zinc-800 truncate">{ind.name}</p>
+                  <p className="text-xs text-zinc-400">{ind._count.roles} contacts</p>
+                </div>
+              </Link>
+            ))}
+            <Link
+              href="/crm/settings/industries"
+              className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50 transition-colors"
+            >
+              <span className="w-9 h-9 rounded-lg bg-zinc-100 flex items-center justify-center text-lg flex-shrink-0">
+                +
+              </span>
+              <p className="text-sm text-zinc-400">Add industry</p>
+            </Link>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="bg-white rounded-xl border border-zinc-200 shadow-sm">
+          <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+            <h2 className="font-semibold text-zinc-900">Recent Activity</h2>
+            <Link href="/crm/activities" className="text-xs text-zinc-400 hover:text-zinc-900">
+              All →
+            </Link>
+          </div>
+          {recentActivities.length === 0 ? (
+            <div className="px-6 py-8 text-center text-zinc-400 text-sm">No activity yet</div>
+          ) : (
+            <div className="divide-y divide-zinc-50">
+              {recentActivities.map((act) => (
+                <div key={act.id} className="px-6 py-3 flex items-start gap-3">
+                  <span className="text-lg mt-0.5 flex-shrink-0">
+                    {activityIcons[act.type] ?? "📝"}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-zinc-800 truncate">{act.title}</p>
+                    <p className="text-xs text-zinc-400">
+                      {act.contact.firstName} {act.contact.lastName}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Recent Jobs */}
+      {/* Recent Contacts */}
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm">
         <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-          <h2 className="font-semibold text-zinc-900">Recent Job Orders</h2>
-          <Link href="/crm/jobs" className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors">View all →</Link>
+          <h2 className="font-semibold text-zinc-900">Recent Contacts</h2>
+          <Link href="/crm/contacts" className="text-xs text-zinc-400 hover:text-zinc-900">
+            View all →
+          </Link>
         </div>
-        {recentJobs.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <p className="text-zinc-400 text-sm">No job orders yet.</p>
-            <Link href="/crm/jobs/new" className="text-sm text-zinc-900 font-medium underline mt-2 block">Create your first job order</Link>
+        {recentContacts.length === 0 ? (
+          <div className="px-6 py-10 text-center">
+            <p className="text-zinc-400 text-sm mb-2">No contacts yet.</p>
+            <Link
+              href="/crm/contacts/new"
+              className="text-sm text-zinc-900 font-medium underline"
+            >
+              Add your first contact
+            </Link>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left border-b border-zinc-100">
-                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Role</th>
-                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Client</th>
-                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</th>
-                <th className="px-6 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Applicants</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentJobs.map((job) => (
-                <tr key={job.id} className="border-b border-zinc-50 last:border-0 hover:bg-zinc-50 transition-colors">
-                  <td className="px-6 py-3 font-medium text-zinc-900">{job.title}</td>
-                  <td className="px-6 py-3 text-zinc-600">{job.client.name}</td>
-                  <td className="px-6 py-3">
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${statusColor[job.status] ?? "bg-zinc-100 text-zinc-600"}`}>
-                      {job.status.replace("_", " ")}
+          <div className="divide-y divide-zinc-50">
+            {recentContacts.map((c) => (
+              <div key={c.id} className="px-6 py-3 flex items-center gap-4">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
+                  style={{ backgroundColor: statusColors[c.status] ?? "#6b7280" }}
+                >
+                  {c.firstName[0]}{c.lastName?.[0] ?? ""}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Link
+                    href={`/crm/contacts/${c.id}`}
+                    className="text-sm font-medium text-zinc-900 hover:underline"
+                  >
+                    {c.firstName} {c.lastName}
+                  </Link>
+                  <p className="text-xs text-zinc-400 truncate">
+                    {c.company ?? c.email ?? c.phone ?? "—"}
+                  </p>
+                </div>
+                <div className="flex gap-1 flex-wrap justify-end">
+                  {c.roles.map((r) => (
+                    <span
+                      key={r.id}
+                      className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: r.industry.color ?? "#6b7280" }}
+                    >
+                      {r.contactType.name}
                     </span>
-                  </td>
-                  <td className="px-6 py-3 text-zinc-600">{job._count.applications}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {wonDealsValue._sum.value ? (
+        <div className="mt-4 bg-green-50 border border-green-100 rounded-xl p-4 flex items-center gap-3">
+          <span className="text-2xl">🏆</span>
+          <p className="text-sm text-green-700">
+            <span className="font-bold">Total pipeline won: </span>
+            {wonDealsValue._sum.value?.toLocaleString("en-IN", { style: "currency", currency: "INR" })}
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

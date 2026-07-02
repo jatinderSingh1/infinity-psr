@@ -1,33 +1,28 @@
+// LOCAL DEVELOPMENT SCHEMA — SQLite
+// Arrays stored as JSON text, enums stored as plain String.
+// Use: npm run dev:local
+
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-
-// ─── AUTH ─────────────────────────────────────────────────────────────────
 
 model User {
   id        String   @id @default(cuid())
   name      String
   email     String   @unique
   password  String
-  role      Role     @default(RECRUITER)
+  role      String   @default("RECRUITER")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum Role {
-  ADMIN
-  RECRUITER
-}
-
-// ─── LEGACY STAFFING (kept for backward compat) ───────────────────────────
-
 model Client {
-  id          String       @id @default(cuid())
+  id          String     @id @default(cuid())
   name        String
   industry    String
   contactName String
@@ -35,16 +30,10 @@ model Client {
   phone       String?
   website     String?
   notes       String?
-  status      ClientStatus @default(ACTIVE)
+  status      String     @default("ACTIVE")
   jobOrders   JobOrder[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
-enum ClientStatus {
-  ACTIVE
-  INACTIVE
-  PROSPECT
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 }
 
 model Candidate {
@@ -56,7 +45,7 @@ model Candidate {
   currentTitle   String?
   currentCompany String?
   industry       String?
-  skills         String[]
+  skills         String        @default("[]")
   resumeUrl      String?
   linkedinUrl    String?
   notes          String?
@@ -71,46 +60,28 @@ model JobOrder {
   client       Client        @relation(fields: [clientId], references: [id])
   clientId     String
   description  String?
-  requirements String[]
+  requirements String        @default("[]")
   salary       String?
   location     String?
-  status       JobStatus     @default(OPEN)
+  status       String        @default("OPEN")
   applications Application[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
 
-enum JobStatus {
-  OPEN
-  ON_HOLD
-  FILLED
-  CANCELLED
-}
-
 model Application {
-  id          String           @id @default(cuid())
-  candidate   Candidate        @relation(fields: [candidateId], references: [id])
+  id          String   @id @default(cuid())
+  candidate   Candidate @relation(fields: [candidateId], references: [id])
   candidateId String
-  jobOrder    JobOrder         @relation(fields: [jobOrderId], references: [id])
+  jobOrder    JobOrder  @relation(fields: [jobOrderId], references: [id])
   jobOrderId  String
-  stage       ApplicationStage @default(APPLIED)
+  stage       String   @default("APPLIED")
   notes       String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@unique([candidateId, jobOrderId])
 }
-
-enum ApplicationStage {
-  APPLIED
-  SCREENED
-  INTERVIEWED
-  OFFER_SENT
-  PLACED
-  REJECTED
-}
-
-// ─── DYNAMIC INDUSTRIES ───────────────────────────────────────────────────
 
 model Industry {
   id           String        @id @default(cuid())
@@ -145,8 +116,6 @@ model ContactType {
   @@unique([industryId, slug])
 }
 
-// ─── CONTACTS (global, multi-role) ────────────────────────────────────────
-
 model Contact {
   id         String        @id @default(cuid())
   firstName  String
@@ -165,20 +134,13 @@ model Contact {
   linkedIn   String?
   currency   String        @default("INR")
   notes      String?
-  tags       String[]
-  status     ContactStatus @default(ACTIVE)
+  tags       String        @default("[]")
+  status     String        @default("ACTIVE")
   roles      ContactRole[]
   activities Activity[]
   deals      Deal[]
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
-}
-
-enum ContactStatus {
-  ACTIVE
-  INACTIVE
-  LEAD
-  PROSPECT
 }
 
 model ContactRole {
@@ -189,7 +151,7 @@ model ContactRole {
   industryId    String
   contactType   ContactType @relation(fields: [contactTypeId], references: [id])
   contactTypeId String
-  customFields  Json?
+  customFields  String?
   notes         String?
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -197,51 +159,30 @@ model ContactRole {
   @@unique([contactId, contactTypeId])
 }
 
-// ─── DEALS / PIPELINE ─────────────────────────────────────────────────────
-
-enum DealStage {
-  LEAD
-  CONTACTED
-  PROPOSAL
-  NEGOTIATION
-  WON
-  LOST
-}
-
 model Deal {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
-  contact     Contact    @relation(fields: [contactId], references: [id])
+  contact     Contact   @relation(fields: [contactId], references: [id])
   contactId   String
-  industry    Industry   @relation(fields: [industryId], references: [id])
+  industry    Industry  @relation(fields: [industryId], references: [id])
   industryId  String
   value       Float?
-  currency    String     @default("INR")
-  stage       DealStage  @default(LEAD)
-  priority    String     @default("MEDIUM")
+  currency    String    @default("INR")
+  stage       String    @default("LEAD")
+  priority    String    @default("MEDIUM")
   notes       String?
   closingDate DateTime?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-}
-
-// ─── ACTIVITIES ───────────────────────────────────────────────────────────
-
-enum ActivityType {
-  NOTE
-  CALL
-  EMAIL
-  MEETING
-  TASK
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Activity {
-  id        String       @id @default(cuid())
-  contact   Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  contact   Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   contactId String
-  type      ActivityType @default(NOTE)
+  type      String   @default("NOTE")
   title     String
   body      String?
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

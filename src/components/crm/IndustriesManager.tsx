@@ -51,6 +51,97 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
   );
 }
 
+interface InlineFormProps {
+  form: { name: string; icon: string; color: string; description: string };
+  setForm: React.Dispatch<React.SetStateAction<{ name: string; icon: string; color: string; description: string }>>;
+  saving: boolean;
+  error: string;
+  onSave: () => void;
+  onCancel: () => void;
+}
+
+function InlineForm({ form, setForm, saving, error, onSave, onCancel }: InlineFormProps) {
+  return (
+    <div className="bg-zinc-50 rounded-xl border border-zinc-200 p-5 space-y-4">
+      {error && <p className="text-red-500 text-sm">{error}</p>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-zinc-500 mb-1 block">Industry Name *</label>
+          <input
+            autoFocus
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="e.g. Furniture"
+            className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300"
+          />
+        </div>
+        <div>
+          <label className="text-xs text-zinc-500 mb-1 block">Description</label>
+          <input
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            placeholder="Brief description…"
+            className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-zinc-500 mb-1 block">Icon (emoji)</label>
+        <div className="flex items-center gap-3">
+          <input
+            value={form.icon}
+            onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
+            className="w-16 border border-zinc-200 rounded px-2 py-1.5 text-center text-xl bg-white focus:outline-none"
+          />
+          <div className="flex gap-1.5 flex-wrap">
+            {PRESET_ICONS.map((ic) => (
+              <button
+                key={ic}
+                type="button"
+                onClick={() => setForm((f) => ({ ...f, icon: ic }))}
+                className={`text-xl p-1 rounded transition-colors ${form.icon === ic ? "bg-zinc-200" : "hover:bg-zinc-100"}`}
+              >
+                {ic}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-zinc-500 mb-2 block">Color</label>
+        <ColorPicker value={form.color} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
+        <div className="mt-2 flex items-center gap-2">
+          <span
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
+            style={{ backgroundColor: form.color }}
+          >
+            {form.icon}
+          </span>
+          <span className="text-sm font-medium text-zinc-700">{form.name || "Preview"}</span>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={onSave}
+          disabled={saving || !form.name}
+          className="bg-zinc-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 disabled:opacity-50 transition-colors"
+        >
+          {saving ? "Saving…" : "Save"}
+        </button>
+        <button
+          onClick={onCancel}
+          className="text-zinc-500 hover:text-zinc-900 px-3 py-2 text-sm transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function IndustriesManager({ industries: initial }: { industries: Industry[] }) {
   const router = useRouter();
   const [industries, setIndustries] = useState(initial);
@@ -143,87 +234,6 @@ export function IndustriesManager({ industries: initial }: { industries: Industr
     router.refresh();
   };
 
-  const InlineForm = ({ onSave, onCancel }: { onSave: () => void; onCancel: () => void }) => (
-    <div className="bg-zinc-50 rounded-xl border border-zinc-200 p-5 space-y-4">
-      {error && <p className="text-red-500 text-sm">{error}</p>}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-zinc-500 mb-1 block">Industry Name *</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-            placeholder="e.g. Furniture"
-            className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300"
-          />
-        </div>
-        <div>
-          <label className="text-xs text-zinc-500 mb-1 block">Description</label>
-          <input
-            value={form.description}
-            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            placeholder="Brief description…"
-            className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300"
-          />
-        </div>
-      </div>
-
-      {/* Icon picker */}
-      <div>
-        <label className="text-xs text-zinc-500 mb-1 block">Icon (emoji)</label>
-        <div className="flex items-center gap-3">
-          <input
-            value={form.icon}
-            onChange={(e) => setForm((f) => ({ ...f, icon: e.target.value }))}
-            className="w-16 border border-zinc-200 rounded px-2 py-1.5 text-center text-xl bg-white focus:outline-none"
-          />
-          <div className="flex gap-1.5 flex-wrap">
-            {PRESET_ICONS.map((ic) => (
-              <button
-                key={ic}
-                type="button"
-                onClick={() => setForm((f) => ({ ...f, icon: ic }))}
-                className={`text-xl p-1 rounded transition-colors ${form.icon === ic ? "bg-zinc-200" : "hover:bg-zinc-100"}`}
-              >
-                {ic}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Color picker */}
-      <div>
-        <label className="text-xs text-zinc-500 mb-2 block">Color</label>
-        <ColorPicker value={form.color} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
-        <div className="mt-2 flex items-center gap-2">
-          <span
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold"
-            style={{ backgroundColor: form.color }}
-          >
-            {form.icon}
-          </span>
-          <span className="text-sm font-medium text-zinc-700">{form.name || "Preview"}</span>
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <button
-          onClick={onSave}
-          disabled={saving || !form.name}
-          className="bg-zinc-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 disabled:opacity-50 transition-colors"
-        >
-          {saving ? "Saving…" : "Save"}
-        </button>
-        <button
-          onClick={onCancel}
-          className="text-zinc-500 hover:text-zinc-900 px-3 py-2 text-sm transition-colors"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-4">
       {/* Add new */}
@@ -236,7 +246,14 @@ export function IndustriesManager({ industries: initial }: { industries: Industr
         </button>
       )}
       {showAdd && (
-        <InlineForm onSave={addIndustry} onCancel={() => { setShowAdd(false); resetForm(); setError(""); }} />
+        <InlineForm
+          form={form}
+          setForm={setForm}
+          saving={saving}
+          error={error}
+          onSave={addIndustry}
+          onCancel={() => { setShowAdd(false); resetForm(); setError(""); }}
+        />
       )}
 
       {/* Industry list */}
@@ -244,7 +261,14 @@ export function IndustriesManager({ industries: initial }: { industries: Industr
         <div key={ind.id} className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
           {editId === ind.id ? (
             <div className="p-5">
-              <InlineForm onSave={() => saveEdit(ind.id)} onCancel={cancelEdit} />
+              <InlineForm
+                form={form}
+                setForm={setForm}
+                saving={saving}
+                error={error}
+                onSave={() => saveEdit(ind.id)}
+                onCancel={cancelEdit}
+              />
             </div>
           ) : (
             <div className="flex items-center gap-4 px-5 py-4">

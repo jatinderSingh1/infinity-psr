@@ -94,6 +94,7 @@ export function Sidebar({ industries, userName, userEmail }: SidebarProps) {
       <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5">
         {/* Core */}
         <NavLink href="/crm" icon="⊞" label="Dashboard" collapsed={collapsed} />
+        <NavLink href="/crm/search" icon="🔍" label="Search" collapsed={collapsed} />
         <NavLink href="/crm/contacts" icon="👥" label="All Contacts" collapsed={collapsed} />
 
         {/* Industries */}

@@ -46,6 +46,8 @@ interface ContactFormProps {
     linkedIn?: string | null;
     currency?: string;
     notes?: string | null;
+    followUpDate?: string | null;
+    followUpNote?: string | null;
     tags?: string[];
     status?: string;
     roles?: { industryId: string; contactTypeId: string; notes?: string | null }[];
@@ -91,6 +93,8 @@ export function ContactForm({
     linkedIn: initialData?.linkedIn ?? "",
     currency: initialData?.currency ?? "INR",
     notes: initialData?.notes ?? "",
+    followUpDate: initialData?.followUpDate ?? "",
+    followUpNote: initialData?.followUpNote ?? "",
     tags: initialData?.tags?.join(", ") ?? "",
     status: initialData?.status ?? "ACTIVE",
   });
@@ -136,6 +140,8 @@ export function ContactForm({
     const payload = {
       ...form,
       tags: form.tags.split(",").map((t) => t.trim()).filter(Boolean),
+      followUpDate: form.followUpDate ? new Date(form.followUpDate).toISOString() : null,
+      followUpNote: form.followUpNote || null,
       roles,
     };
 
@@ -304,6 +310,32 @@ export function ContactForm({
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* Follow-up */}
+      <section className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm">
+        <h2 className="font-semibold text-zinc-900 mb-4">Follow-up Reminder</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-zinc-600 mb-1">Follow-up Date</label>
+            <input
+              type="date"
+              value={form.followUpDate}
+              onChange={(e) => setForm((f) => ({ ...f, followUpDate: e.target.value }))}
+              className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 bg-white"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-zinc-600 mb-1">Reminder Note</label>
+            <input
+              type="text"
+              value={form.followUpNote}
+              onChange={(e) => setForm((f) => ({ ...f, followUpNote: e.target.value }))}
+              placeholder="e.g. Check on order status"
+              className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 bg-white"
+            />
+          </div>
         </div>
       </section>
 

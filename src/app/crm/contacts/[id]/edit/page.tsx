@@ -35,7 +35,14 @@ export default async function EditContactPage({ params }: { params: Promise<{ id
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-900">Edit Contact</h1>
       </div>
-      <ContactForm industries={industries} initialData={{ ...contact, tags: asArr(contact.tags) }} />
+      <ContactForm
+        industries={industries}
+        initialData={{
+          ...contact,
+          tags: asArr(contact.tags),
+          followUpDate: contact.followUpDate ? contact.followUpDate.toISOString().split("T")[0] : null,
+        }}
+      />
     </div>
   );
 }

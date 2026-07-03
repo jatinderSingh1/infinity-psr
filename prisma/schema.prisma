@@ -164,9 +164,11 @@ model Contact {
   instagram  String?
   linkedIn   String?
   currency   String        @default("INR")
-  notes      String?
-  tags       String[]
-  status     ContactStatus @default(ACTIVE)
+  notes        String?
+  followUpDate DateTime?
+  followUpNote String?
+  tags         String[]
+  status       ContactStatus @default(ACTIVE)
   roles      ContactRole[]
   activities Activity[]
   deals      Deal[]

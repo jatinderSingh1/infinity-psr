@@ -101,12 +101,28 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
                 <div className="flex items-center gap-2">
                   <span className="text-zinc-400">📞</span>
                   <a href={`tel:${contact.phone}`} className="text-zinc-700 hover:underline">{contact.phone}</a>
+                  <a
+                    href={`https://wa.me/${contact.phone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium hover:bg-green-200 transition-colors"
+                  >
+                    WA
+                  </a>
                 </div>
               )}
               {contact.phone2 && (
                 <div className="flex items-center gap-2">
                   <span className="text-zinc-400">📱</span>
                   <a href={`tel:${contact.phone2}`} className="text-zinc-700 hover:underline">{contact.phone2}</a>
+                  <a
+                    href={`https://wa.me/${contact.phone2.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-medium hover:bg-green-200 transition-colors"
+                  >
+                    WA
+                  </a>
                 </div>
               )}
               {contact.website && (
@@ -153,6 +169,28 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               </div>
             </div>
           )}
+
+          {/* Follow-up */}
+          {contact.followUpDate && (() => {
+            const due = new Date(contact.followUpDate);
+            const overdue = due < new Date();
+            return (
+              <div className={`rounded-xl border p-5 shadow-sm ${overdue ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                <h2 className="font-semibold mb-2 text-sm uppercase tracking-wide" style={{ color: overdue ? "#b91c1c" : "#92400e" }}>
+                  {overdue ? "Overdue Follow-up" : "Follow-up"}
+                </h2>
+                <p className="text-sm font-medium" style={{ color: overdue ? "#b91c1c" : "#78350f" }}>
+                  {due.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </p>
+                {contact.followUpNote && (
+                  <p className="text-sm mt-1" style={{ color: overdue ? "#dc2626" : "#92400e" }}>{contact.followUpNote}</p>
+                )}
+                <a href={`/crm/contacts/${contact.id}/edit`} className="text-xs underline mt-2 block" style={{ color: overdue ? "#b91c1c" : "#92400e" }}>
+                  Update date →
+                </a>
+              </div>
+            );
+          })()}
 
           {/* Notes */}
           {contact.notes && (

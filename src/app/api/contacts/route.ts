@@ -73,6 +73,8 @@ export async function POST(req: Request) {
     linkedIn,
     currency,
     notes,
+    followUpDate,
+    followUpNote,
     tags,
     status,
     roles,
@@ -98,6 +100,8 @@ export async function POST(req: Request) {
       linkedIn,
       currency: currency ?? "INR",
       notes,
+      followUpDate: followUpDate ? new Date(followUpDate) : null,
+      followUpNote: followUpNote ?? null,
       tags: arrWrite(tags ?? []),
       status: status ?? "ACTIVE",
       roles: roles?.length

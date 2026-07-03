@@ -28,6 +28,13 @@ export default async function DashboardPage() {
     include: { contact: { select: { firstName: true, lastName: true } } },
   });
 
+  const overdueFollowUps = await prisma.contact.findMany({
+    where: { followUpDate: { lte: new Date() } },
+    orderBy: { followUpDate: "asc" },
+    take: 8,
+    select: { id: true, firstName: true, lastName: true, followUpDate: true, followUpNote: true },
+  });
+
   const wonDealsValue = await prisma.deal.aggregate({
     where: { stage: "WON" },
     _sum: { value: true },
@@ -161,6 +168,40 @@ export default async function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Overdue Follow-ups */}
+      {overdueFollowUps.length > 0 && (
+        <div className="bg-red-50 rounded-xl border border-red-200 shadow-sm mb-6">
+          <div className="px-6 py-4 border-b border-red-100 flex items-center justify-between">
+            <h2 className="font-semibold text-red-800">Overdue Follow-ups ({overdueFollowUps.length})</h2>
+          </div>
+          <div className="divide-y divide-red-100">
+            {overdueFollowUps.map((c) => {
+              const daysAgo = Math.floor((Date.now() - new Date(c.followUpDate!).getTime()) / 86400000);
+              return (
+                <div key={c.id} className="px-6 py-3 flex items-center gap-4">
+                  <span className="text-xl flex-shrink-0">⏰</span>
+                  <div className="flex-1 min-w-0">
+                    <a href={`/crm/contacts/${c.id}`} className="text-sm font-medium text-red-900 hover:underline">
+                      {c.firstName} {c.lastName}
+                    </a>
+                    {c.followUpNote && <p className="text-xs text-red-600">{c.followUpNote}</p>}
+                  </div>
+                  <span className="text-xs text-red-500 flex-shrink-0">
+                    {daysAgo === 0 ? "today" : `${daysAgo}d overdue`}
+                  </span>
+                  <a
+                    href={`/crm/contacts/${c.id}/edit`}
+                    className="text-xs text-red-600 hover:text-red-900 underline flex-shrink-0"
+                  >
+                    Update
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recent Contacts */}
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm">

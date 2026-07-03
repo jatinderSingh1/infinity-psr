@@ -25,10 +25,6 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const industry = await prisma.industry.findUnique({ where: { id } });
   if (!industry) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  if (industry.isSystem) {
-    return NextResponse.json({ error: "System industries cannot be deleted" }, { status: 403 });
-  }
-
   await prisma.industry.delete({ where: { id } });
   return NextResponse.json({ ok: true });
 }

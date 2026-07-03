@@ -328,14 +328,12 @@ export function IndustriesManager({ industries: initial }: { industries: Industr
                 >
                   {ind.isActive ? "Hide" : "Show"}
                 </button>
-                {!ind.isSystem && (
-                  <button
-                    onClick={() => deleteIndustry(ind)}
-                    className="text-xs text-red-400 hover:text-red-600 border border-red-100 px-2.5 py-1.5 rounded-lg transition-colors"
-                  >
-                    Delete
-                  </button>
-                )}
+                <button
+                  onClick={() => deleteIndustry(ind)}
+                  className="text-xs text-red-400 hover:text-red-600 border border-red-100 px-2.5 py-1.5 rounded-lg transition-colors"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           )}

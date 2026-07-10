@@ -10,9 +10,13 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = (searchParams.get("q") ?? "").trim();
 
-  if (q.length < 2) return NextResponse.json({ contacts: [], deals: [] });
+  if (q.length < 2) {
+    return NextResponse.json({ contacts: [], deals: [], products: [], orders: [] });
+  }
 
-  const [contacts, deals] = await Promise.all([
+  const qNum = parseInt(q.replace(/^#/, ""), 10);
+
+  const [contacts, deals, products, orders] = await Promise.all([
     prisma.contact.findMany({
       where: {
         OR: [
@@ -23,7 +27,7 @@ export async function GET(req: Request) {
           { phone: { contains: q, ...searchMode() } },
         ],
       },
-      take: 10,
+      take: 8,
       orderBy: { updatedAt: "desc" },
       select: {
         id: true,
@@ -44,7 +48,34 @@ export async function GET(req: Request) {
         industry: { select: { name: true, color: true, icon: true } },
       },
     }),
+    prisma.product.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, ...searchMode() } },
+          { sku: { contains: q, ...searchMode() } },
+          { category: { contains: q, ...searchMode() } },
+        ],
+      },
+      take: 5,
+      orderBy: { updatedAt: "desc" },
+      select: { id: true, name: true, sku: true, price: true, stock: true, currency: true },
+    }),
+    prisma.order.findMany({
+      where: Number.isFinite(qNum)
+        ? { number: qNum }
+        : {
+            contact: {
+              OR: [
+                { firstName: { contains: q, ...searchMode() } },
+                { lastName: { contains: q, ...searchMode() } },
+              ],
+            },
+          },
+      take: 5,
+      orderBy: { createdAt: "desc" },
+      include: { contact: { select: { firstName: true, lastName: true } } },
+    }),
   ]);
 
-  return NextResponse.json({ contacts, deals });
+  return NextResponse.json({ contacts, deals, products, orders });
 }

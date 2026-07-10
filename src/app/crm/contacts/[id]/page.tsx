@@ -68,7 +68,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               >
                 {contact.status}
               </span>
-              {contact.currency && contact.currency !== "INR" && (
+              {contact.currency && contact.currency !== "CAD" && (
                 <span className="text-xs text-zinc-400">{contact.currency}</span>
               )}
             </div>

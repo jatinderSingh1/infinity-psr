@@ -1,13 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { asArr } from "@/lib/utils";
-
-const STATUS_COLORS: Record<string, string> = {
-  ACTIVE: "#059669",
-  INACTIVE: "#6b7280",
-  LEAD: "#4f46e5",
-  PROSPECT: "#d97706",
-};
+import { Badge, contactStatusTone, PageHeader, EmptyState, card, btnPrimary, btnSecondary, inputCls, thCls, tdCls } from "@/components/crm/ui";
 
 export default async function ContactsPage({
   searchParams,
@@ -46,7 +40,7 @@ export default async function ContactsPage({
         },
         take: 3,
       },
-      _count: { select: { activities: true, deals: true } },
+      _count: { select: { activities: true, deals: true, orders: true } },
     },
   });
 
@@ -57,130 +51,102 @@ export default async function ContactsPage({
   });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">Contacts</h1>
-          <p className="text-zinc-500 text-sm mt-0.5">{contacts.length} result{contacts.length !== 1 ? "s" : ""}</p>
-        </div>
-        <Link
-          href="/crm/contacts/new"
-          className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors"
-        >
-          + Add Contact
-        </Link>
-      </div>
+    <div className="p-5 max-w-[1050px] mx-auto">
+      <PageHeader
+        title="Contacts"
+        subtitle={`${contacts.length} contact${contacts.length !== 1 ? "s" : ""}`}
+        actions={
+          <>
+            <Link href="/crm/settings/import" className={btnSecondary}>Import</Link>
+            <a href="/api/contacts/export" className={btnSecondary}>Export CSV</a>
+            <Link href="/crm/contacts/new" className={btnPrimary}>Add contact</Link>
+          </>
+        }
+      />
 
       {/* Filters */}
-      <form method="GET" className="flex gap-3 mb-6 flex-wrap">
+      <form method="GET" className="flex gap-2 mb-4 flex-wrap">
         <input
           name="search"
           defaultValue={search}
-          placeholder="Search name, email, company…"
-          className="flex-1 min-w-48 border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-300"
+          placeholder="Search name, email, company, phone…"
+          className={`${inputCls} flex-1 min-w-44 max-w-xs`}
         />
-        <select
-          name="industry"
-          defaultValue={industrySlug}
-          className="border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-300"
-        >
-          <option value="">All Industries</option>
+        <select name="industry" defaultValue={industrySlug} className={`${inputCls} w-auto`}>
+          <option value="">All industries</option>
           {industries.map((ind) => (
-            <option key={ind.slug} value={ind.slug}>
-              {ind.icon} {ind.name}
-            </option>
+            <option key={ind.slug} value={ind.slug}>{ind.icon} {ind.name}</option>
           ))}
         </select>
-        <select
-          name="status"
-          defaultValue={status}
-          className="border border-zinc-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-300"
-        >
-          <option value="">All Statuses</option>
+        <select name="status" defaultValue={status} className={`${inputCls} w-auto`}>
+          <option value="">All statuses</option>
           <option value="ACTIVE">Active</option>
           <option value="LEAD">Lead</option>
           <option value="PROSPECT">Prospect</option>
           <option value="INACTIVE">Inactive</option>
         </select>
-        <button
-          type="submit"
-          className="bg-zinc-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors"
-        >
-          Filter
-        </button>
+        <button type="submit" className={btnSecondary}>Filter</button>
         {(search || industrySlug || status) && (
-          <Link
-            href="/crm/contacts"
-            className="border border-zinc-200 text-zinc-600 px-4 py-2 rounded-lg text-sm hover:bg-zinc-50 transition-colors"
-          >
-            Clear
-          </Link>
+          <Link href="/crm/contacts" className={`${btnSecondary} border-transparent shadow-none`}>Clear</Link>
         )}
       </form>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
+      <div className={`${card} overflow-hidden`}>
         {contacts.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-zinc-400 text-sm mb-3">No contacts found</p>
-            <Link
-              href="/crm/contacts/new"
-              className="text-sm text-zinc-900 font-medium underline"
-            >
-              Add your first contact
-            </Link>
-          </div>
+          <EmptyState
+            icon="👥"
+            title="No contacts found"
+            text="Add contacts one at a time, or import your whole list from a spreadsheet."
+            action={
+              <div className="flex gap-2 justify-center">
+                <Link href="/crm/settings/import" className={btnSecondary}>Import CSV</Link>
+                <Link href="/crm/contacts/new" className={btnPrimary}>Add contact</Link>
+              </div>
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[640px]">
-              <thead className="border-b border-zinc-100">
+            <table className="w-full min-w-[720px]">
+              <thead className="border-b border-[#ebebeb] bg-[#fafafa]">
                 <tr>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Name</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Company</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Contact</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Roles</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-zinc-500 uppercase tracking-wide">Activity</th>
+                  <th className={thCls}>Name</th>
+                  <th className={thCls}>Company</th>
+                  <th className={thCls}>Contact</th>
+                  <th className={thCls}>Roles</th>
+                  <th className={thCls}>Status</th>
+                  <th className={thCls}>History</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-50">
+              <tbody className="divide-y divide-[#f1f1f1]">
                 {contacts.map((c) => (
-                  <tr key={c.id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                          style={{ backgroundColor: STATUS_COLORS[c.status] ?? "#6b7280" }}
-                        >
+                  <tr key={c.id} className="hover:bg-[#fafafa] transition-colors">
+                    <td className={tdCls}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#e3e3e3] flex items-center justify-center text-xs font-bold text-[#303030] flex-shrink-0">
                           {c.firstName[0]}{c.lastName?.[0] ?? ""}
                         </div>
                         <div>
-                          <Link
-                            href={`/crm/contacts/${c.id}`}
-                            className="font-medium text-zinc-900 hover:underline"
-                          >
+                          <Link href={`/crm/contacts/${c.id}`} className="font-medium text-[#1a1a1a] hover:underline">
                             {c.firstName} {c.lastName}
                           </Link>
                           {asArr(c.tags).length > 0 && (
-                            <p className="text-xs text-zinc-400">{asArr(c.tags).slice(0, 2).join(", ")}</p>
+                            <p className="text-xs text-[#8a8a8a]">{asArr(c.tags).slice(0, 2).join(", ")}</p>
                           )}
                         </div>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-zinc-600">{c.company ?? "—"}</td>
-                    <td className="px-5 py-3">
-                      <p className="text-zinc-600">{c.email ?? c.phone ?? "—"}</p>
-                      {c.email && c.phone && (
-                        <p className="text-xs text-zinc-400">{c.phone}</p>
-                      )}
+                    <td className={`${tdCls} text-[#616161]`}>{c.company ?? "—"}</td>
+                    <td className={tdCls}>
+                      <p className="text-[#616161]">{c.email ?? c.phone ?? "—"}</p>
+                      {c.email && c.phone && <p className="text-xs text-[#8a8a8a]">{c.phone}</p>}
                     </td>
-                    <td className="px-5 py-3">
+                    <td className={tdCls}>
                       <div className="flex gap-1 flex-wrap">
                         {c.roles.map((r) => (
                           <span
                             key={r.id}
-                            className="px-1.5 py-0.5 rounded text-xs font-medium text-white"
+                            className="px-1.5 py-0.5 rounded text-[11px] font-medium text-white whitespace-nowrap"
                             style={{ backgroundColor: r.industry.color ?? "#6b7280" }}
                           >
                             {r.industry.icon} {r.contactType.name}
@@ -188,16 +154,11 @@ export default async function ContactsPage({
                         ))}
                       </div>
                     </td>
-                    <td className="px-5 py-3">
-                      <span
-                        className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                        style={{ backgroundColor: STATUS_COLORS[c.status] ?? "#6b7280" }}
-                      >
-                        {c.status}
-                      </span>
+                    <td className={tdCls}>
+                      <Badge tone={contactStatusTone(c.status)}>{c.status}</Badge>
                     </td>
-                    <td className="px-5 py-3 text-zinc-400 text-xs">
-                      {c._count.activities} notes · {c._count.deals} deals
+                    <td className={`${tdCls} text-xs text-[#8a8a8a] whitespace-nowrap`}>
+                      {c._count.orders} orders · {c._count.deals} deals · {c._count.activities} notes
                     </td>
                   </tr>
                 ))}

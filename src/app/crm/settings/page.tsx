@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { card } from "@/components/crm/ui";
 
 const SETTINGS = [
   {
@@ -19,31 +20,50 @@ const SETTINGS = [
     title: "Users",
     desc: "Manage team members and their access levels.",
   },
+  {
+    href: "/crm/settings/import",
+    icon: "📥",
+    title: "Import Contacts",
+    desc: "Bulk-import contacts from a CSV file or pasted spreadsheet data.",
+  },
+  {
+    href: "/api/contacts/export",
+    icon: "📤",
+    title: "Export Data",
+    desc: "Download all contacts as a CSV file. Orders can be exported from the Orders page.",
+    external: true,
+  },
 ];
 
 export default function SettingsPage() {
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-zinc-900">Settings</h1>
-        <p className="text-zinc-500 text-sm mt-0.5">Configure your ERP/CRM system</p>
+    <div className="p-5 max-w-[750px] mx-auto">
+      <div className="mb-5">
+        <h1 className="text-xl font-bold text-[#1a1a1a]">Settings</h1>
+        <p className="text-[13px] text-[#616161] mt-0.5">Configure your ERP / CRM system</p>
       </div>
 
-      <div className="grid gap-4">
-        {SETTINGS.map((s) => (
-          <Link
-            key={s.href}
-            href={s.href}
-            className="bg-white rounded-xl border border-zinc-200 p-6 shadow-sm hover:shadow-md hover:border-zinc-300 transition-all flex items-start gap-4"
-          >
-            <span className="text-3xl flex-shrink-0">{s.icon}</span>
-            <div>
-              <p className="font-semibold text-zinc-900 mb-1">{s.title}</p>
-              <p className="text-sm text-zinc-500">{s.desc}</p>
-            </div>
-            <span className="ml-auto text-zinc-300 text-lg self-center">→</span>
-          </Link>
-        ))}
+      <div className="grid gap-3">
+        {SETTINGS.map((s) => {
+          const inner = (
+            <>
+              <span className="text-2xl flex-shrink-0 w-10 h-10 rounded-lg bg-[#f1f1f1] flex items-center justify-center">
+                {s.icon}
+              </span>
+              <div>
+                <p className="text-[13px] font-semibold text-[#1a1a1a] mb-0.5">{s.title}</p>
+                <p className="text-[13px] text-[#616161]">{s.desc}</p>
+              </div>
+              <span className="ml-auto text-[#c7c7c7] self-center">→</span>
+            </>
+          );
+          const cls = `${card} p-4 hover:border-[#c7c7c7] transition-colors flex items-start gap-3`;
+          return s.external ? (
+            <a key={s.href} href={s.href} className={cls}>{inner}</a>
+          ) : (
+            <Link key={s.href} href={s.href} className={cls}>{inner}</Link>
+          );
+        })}
       </div>
     </div>
   );

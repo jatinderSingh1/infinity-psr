@@ -62,7 +62,7 @@ export function ContactDetailClient({ contact, industries }: Props) {
     title: "",
     industryId: "",
     value: "",
-    currency: "INR",
+    currency: "CAD",
     stage: "LEAD",
     priority: "MEDIUM",
     notes: "",
@@ -104,7 +104,7 @@ export function ContactDetailClient({ contact, industries }: Props) {
       });
       const deal = await res.json();
       setDeals((prev) => [deal, ...prev]);
-      setDealForm({ title: "", industryId: "", value: "", currency: "INR", stage: "LEAD", priority: "MEDIUM", notes: "" });
+      setDealForm({ title: "", industryId: "", value: "", currency: "CAD", stage: "LEAD", priority: "MEDIUM", notes: "" });
       setShowDealForm(false);
       router.refresh();
     } finally {
@@ -301,7 +301,7 @@ export function ContactDetailClient({ contact, industries }: Props) {
                     onChange={(e) => setDealForm((f) => ({ ...f, currency: e.target.value }))}
                     className="w-full border border-zinc-200 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300"
                   >
-                    {["INR", "USD", "GBP", "EUR", "AED", "SGD"].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {["CAD", "USD", "INR", "GBP", "EUR", "AED"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
               </div>

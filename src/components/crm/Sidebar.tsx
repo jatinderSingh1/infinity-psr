@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { doSignOut } from "@/lib/actions";
 
 interface ContactType {
   id: string;
@@ -22,40 +21,22 @@ interface Industry {
 
 interface SidebarProps {
   industries: Industry[];
-  userName: string;
-  userEmail: string;
+  open: boolean;
+  onClose: () => void;
 }
 
-function NavLink({
-  href,
-  icon,
-  label,
-  collapsed,
-}: {
-  href: string;
-  icon: string;
-  label: string;
-  collapsed: boolean;
-}) {
-  const pathname = usePathname();
-  const active = href === "/crm" ? pathname === "/crm" : pathname.startsWith(href);
-  return (
-    <Link
-      href={href}
-      title={collapsed ? label : undefined}
-      className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-        active ? "bg-zinc-700 text-white" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-      }`}
-    >
-      <span className="text-base w-5 text-center flex-shrink-0">{icon}</span>
-      {!collapsed && <span className="truncate">{label}</span>}
-    </Link>
-  );
-}
+const MAIN_NAV = [
+  { href: "/crm", icon: "🏠", label: "Home", exact: true },
+  { href: "/crm/orders", icon: "🧾", label: "Orders" },
+  { href: "/crm/products", icon: "📦", label: "Products" },
+  { href: "/crm/contacts", icon: "👥", label: "Contacts" },
+  { href: "/crm/pipeline", icon: "📊", label: "Pipeline" },
+  { href: "/crm/activities", icon: "📋", label: "Activities" },
+  { href: "/crm/reports", icon: "📈", label: "Reports" },
+];
 
-export function Sidebar({ industries, userName, userEmail }: SidebarProps) {
+export function Sidebar({ industries, open, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const init: Record<string, boolean> = {};
     industries.forEach((ind) => {
@@ -67,134 +48,104 @@ export function Sidebar({ industries, userName, userEmail }: SidebarProps) {
   const toggle = (slug: string) =>
     setExpanded((prev) => ({ ...prev, [slug]: !prev[slug] }));
 
+  const itemCls = (active: boolean) =>
+    `flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-[13px] transition-colors ${
+      active
+        ? "bg-white text-[#1a1a1a] font-semibold shadow-sm"
+        : "text-[#4a4a4a] font-medium hover:bg-[#e3e3e3]"
+    }`;
+
   return (
-    <aside
-      className={`${
-        collapsed ? "w-16" : "w-64"
-      } bg-zinc-900 flex flex-col flex-shrink-0 transition-all duration-200 min-h-screen`}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-800">
-        {!collapsed && (
-          <div>
-            <p className="font-bold text-white text-sm tracking-tight">INFINITY PSR</p>
-            <p className="text-[11px] text-zinc-500">ERP / CRM</p>
-          </div>
-        )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="text-zinc-500 hover:text-white transition-colors p-1 ml-auto"
-          title={collapsed ? "Expand" : "Collapse"}
-        >
-          {collapsed ? "→" : "←"}
-        </button>
-      </div>
+    <>
+      {/* Mobile backdrop */}
+      {open && (
+        <div className="fixed inset-0 top-14 bg-black/30 z-30 md:hidden" onClick={onClose} />
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-3 overflow-y-auto flex flex-col gap-0.5">
-        {/* Core */}
-        <NavLink href="/crm" icon="⊞" label="Dashboard" collapsed={collapsed} />
-        <NavLink href="/crm/search" icon="🔍" label="Search" collapsed={collapsed} />
-        <NavLink href="/crm/contacts" icon="👥" label="All Contacts" collapsed={collapsed} />
+      <aside
+        className={`fixed md:sticky top-14 z-30 h-[calc(100vh-3.5rem)] w-60 bg-[#ebebeb] flex flex-col flex-shrink-0 transition-transform duration-200 ${
+          open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <nav className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-0.5">
+          {MAIN_NAV.map((item) => {
+            const active = item.exact
+              ? pathname === item.href
+              : pathname.startsWith(item.href);
+            return (
+              <Link key={item.href} href={item.href} onClick={onClose} className={itemCls(active)}>
+                <span className="w-5 text-center text-[15px]">{item.icon}</span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
 
-        {/* Industries */}
-        {!collapsed && (
-          <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold px-3 mt-4 mb-1">
+          {/* Industries */}
+          <p className="text-[11px] font-semibold text-[#8a8a8a] px-2 mt-4 mb-1 uppercase tracking-wider">
             Industries
           </p>
-        )}
-        {collapsed && <div className="my-2 border-t border-zinc-800" />}
-
-        {industries.map((ind) => {
-          const parentActive = pathname.startsWith(`/crm/industries/${ind.slug}`);
-          const isExpanded = expanded[ind.slug] ?? parentActive;
-
-          return (
-            <div key={ind.id}>
-              <div className="flex items-center gap-1">
-                <Link
-                  href={`/crm/industries/${ind.slug}`}
-                  title={collapsed ? ind.name : undefined}
-                  className={`flex-1 flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors min-w-0 ${
-                    parentActive
-                      ? "bg-zinc-700 text-white"
-                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-                  }`}
-                >
-                  <span
-                    className="w-5 h-5 rounded flex items-center justify-center text-sm flex-shrink-0"
-                    style={{ backgroundColor: ind.color ? ind.color + "30" : undefined }}
+          {industries.map((ind) => {
+            const parentActive = pathname.startsWith(`/crm/industries/${ind.slug}`);
+            const isExpanded = expanded[ind.slug] ?? parentActive;
+            return (
+              <div key={ind.id}>
+                <div className="flex items-center">
+                  <Link
+                    href={`/crm/industries/${ind.slug}`}
+                    onClick={onClose}
+                    className={`flex-1 min-w-0 ${itemCls(parentActive)}`}
                   >
-                    {ind.icon ?? "📁"}
-                  </span>
-                  {!collapsed && <span className="truncate">{ind.name}</span>}
-                </Link>
-                {!collapsed && (
-                  <button
-                    onClick={() => toggle(ind.slug)}
-                    className="p-1 text-zinc-600 hover:text-zinc-300 transition-colors flex-shrink-0 text-xs"
-                  >
-                    {isExpanded ? "▾" : "▸"}
-                  </button>
+                    <span className="w-5 text-center text-[15px]">{ind.icon ?? "📁"}</span>
+                    <span className="truncate">{ind.name}</span>
+                  </Link>
+                  {ind.contactTypes.length > 0 && (
+                    <button
+                      onClick={() => toggle(ind.slug)}
+                      className="p-1 text-[#8a8a8a] hover:text-[#1a1a1a] transition-colors text-[10px] w-6 flex-shrink-0 cursor-pointer"
+                    >
+                      {isExpanded ? "▼" : "▶"}
+                    </button>
+                  )}
+                </div>
+                {isExpanded && ind.contactTypes.length > 0 && (
+                  <div className="ml-[26px] pl-2 border-l border-[#d4d4d4] flex flex-col gap-0.5 my-0.5">
+                    {ind.contactTypes.map((ct) => {
+                      const href = `/crm/industries/${ind.slug}/${ct.slug}`;
+                      const active = pathname === href;
+                      return (
+                        <Link
+                          key={ct.id}
+                          href={href}
+                          onClick={onClose}
+                          className={`px-2 py-1 rounded-md text-xs transition-colors ${
+                            active
+                              ? "bg-white text-[#1a1a1a] font-semibold shadow-sm"
+                              : "text-[#616161] hover:bg-[#e3e3e3]"
+                          }`}
+                        >
+                          {ct.name}
+                        </Link>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
+            );
+          })}
+        </nav>
 
-              {!collapsed && isExpanded && ind.contactTypes.length > 0 && (
-                <div className="ml-4 mt-0.5 mb-0.5 pl-3 border-l border-zinc-800 flex flex-col gap-0.5">
-                  {ind.contactTypes.map((ct) => {
-                    const href = `/crm/industries/${ind.slug}/${ct.slug}`;
-                    const active = pathname === href;
-                    return (
-                      <Link
-                        key={ct.id}
-                        href={href}
-                        className={`px-2 py-1.5 rounded text-xs transition-colors ${
-                          active
-                            ? "bg-zinc-800 text-white"
-                            : "text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800"
-                        }`}
-                      >
-                        {ct.name}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {/* Management */}
-        {!collapsed && (
-          <p className="text-[10px] uppercase tracking-widest text-zinc-600 font-semibold px-3 mt-4 mb-1">
-            Management
-          </p>
-        )}
-        {collapsed && <div className="my-2 border-t border-zinc-800" />}
-
-        <NavLink href="/crm/pipeline" icon="📊" label="Pipeline" collapsed={collapsed} />
-        <NavLink href="/crm/activities" icon="📋" label="Activities" collapsed={collapsed} />
-        <NavLink href="/crm/settings" icon="⚙️" label="Settings" collapsed={collapsed} />
-      </nav>
-
-      {/* User footer */}
-      <div className="px-3 py-4 border-t border-zinc-800">
-        {!collapsed && (
-          <div className="mb-2">
-            <p className="text-xs text-zinc-300 font-medium truncate">{userName}</p>
-            <p className="text-xs text-zinc-600 truncate">{userEmail}</p>
-          </div>
-        )}
-        <form action={doSignOut}>
-          <button
-            type="submit"
-            title={collapsed ? "Sign out" : undefined}
-            className="text-xs text-zinc-500 hover:text-white transition-colors"
+        {/* Settings pinned bottom */}
+        <div className="px-3 py-3 border-t border-[#dedede]">
+          <Link
+            href="/crm/settings"
+            onClick={onClose}
+            className={itemCls(pathname.startsWith("/crm/settings"))}
           >
-            {collapsed ? "↪" : "Sign out →"}
-          </button>
-        </form>
-      </div>
-    </aside>
+            <span className="w-5 text-center text-[15px]">⚙️</span>
+            <span>Settings</span>
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }

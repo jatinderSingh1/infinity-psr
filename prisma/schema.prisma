@@ -125,6 +125,7 @@ model Industry {
   contactTypes ContactType[]
   roles        ContactRole[]
   deals        Deal[]
+  products     Product[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
@@ -163,7 +164,7 @@ model Contact {
   website    String?
   instagram  String?
   linkedIn   String?
-  currency   String        @default("INR")
+  currency   String        @default("CAD")
   notes        String?
   followUpDate DateTime?
   followUpNote String?
@@ -172,6 +173,7 @@ model Contact {
   roles      ContactRole[]
   activities Activity[]
   deals      Deal[]
+  orders     Order[]
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
 }
@@ -218,7 +220,7 @@ model Deal {
   industry    Industry   @relation(fields: [industryId], references: [id])
   industryId  String
   value       Float?
-  currency    String     @default("INR")
+  currency    String     @default("CAD")
   stage       DealStage  @default(LEAD)
   priority    String     @default("MEDIUM")
   notes       String?
@@ -246,4 +248,60 @@ model Activity {
   body      String?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
+}
+
+// ─── PRODUCTS & INVENTORY ─────────────────────────────────────────────────
+
+model Product {
+  id          String      @id @default(cuid())
+  name        String
+  sku         String?
+  description String?
+  category    String?
+  price       Float       @default(0)
+  cost        Float?
+  stock       Int         @default(0)
+  lowStockAt  Int         @default(5)
+  unit        String      @default("pcs")
+  currency    String      @default("CAD")
+  isActive    Boolean     @default(true)
+  industry    Industry?   @relation(fields: [industryId], references: [id])
+  industryId  String?
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+// ─── ORDERS & INVOICES ────────────────────────────────────────────────────
+
+model Order {
+  id            String      @id @default(cuid())
+  number        Int         @unique
+  contact       Contact     @relation(fields: [contactId], references: [id])
+  contactId     String
+  status        String      @default("OPEN") // OPEN, FULFILLED, CANCELLED
+  paymentStatus String      @default("UNPAID") // UNPAID, PARTIAL, PAID
+  subtotal      Float       @default(0)
+  discount      Float       @default(0)
+  taxRate       Float       @default(0)
+  tax           Float       @default(0)
+  total         Float       @default(0)
+  amountPaid    Float       @default(0)
+  currency      String      @default("CAD")
+  notes         String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   String
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productId String?
+  title     String
+  quantity  Float    @default(1)
+  price     Float    @default(0)
+  total     Float    @default(0)
 }

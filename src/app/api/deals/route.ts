@@ -38,7 +38,7 @@ export async function POST(req: Request) {
       contactId,
       industryId,
       value: value ? parseFloat(value) : undefined,
-      currency: currency ?? "INR",
+      currency: currency ?? "CAD",
       stage: stage ?? "LEAD",
       priority: priority ?? "MEDIUM",
       notes,

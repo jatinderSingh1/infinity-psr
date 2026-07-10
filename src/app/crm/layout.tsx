@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Sidebar } from "@/components/crm/Sidebar";
+import { AdminShell } from "@/components/crm/AdminShell";
 
 export default async function CRMLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -10,7 +10,12 @@ export default async function CRMLayout({ children }: { children: React.ReactNod
   const industries = await prisma.industry.findMany({
     where: { isActive: true },
     orderBy: { order: "asc" },
-    include: {
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      icon: true,
+      color: true,
       contactTypes: {
         where: { isActive: true },
         orderBy: { order: "asc" },
@@ -20,13 +25,12 @@ export default async function CRMLayout({ children }: { children: React.ReactNod
   });
 
   return (
-    <div className="min-h-screen flex bg-zinc-100">
-      <Sidebar
-        industries={industries}
-        userName={session.user?.name ?? "User"}
-        userEmail={session.user?.email ?? ""}
-      />
-      <main className="flex-1 overflow-auto bg-zinc-50">{children}</main>
-    </div>
+    <AdminShell
+      industries={industries}
+      userName={session.user?.name ?? "User"}
+      userEmail={session.user?.email ?? ""}
+    >
+      {children}
+    </AdminShell>
   );
 }

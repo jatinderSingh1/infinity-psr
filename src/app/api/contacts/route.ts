@@ -98,7 +98,7 @@ export async function POST(req: Request) {
       website,
       instagram,
       linkedIn,
-      currency: currency ?? "INR",
+      currency: currency ?? "CAD",
       notes,
       followUpDate: followUpDate ? new Date(followUpDate) : null,
       followUpNote: followUpNote ?? null,

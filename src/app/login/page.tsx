@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -31,54 +30,63 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <div className="min-h-screen bg-zinc-900 flex items-center justify-center px-4">
-      <div className="bg-zinc-800 rounded-2xl border border-zinc-700 shadow-xl p-8 w-full max-w-sm">
-        <Link href="/" className="text-sm text-zinc-400 hover:text-white mb-6 block transition-colors">
-          ← Back to site
-        </Link>
+  const inputCls =
+    "w-full border border-[#b5b5b5] rounded-lg px-3.5 py-2.5 text-sm bg-white text-[#1a1a1a] placeholder-[#8a8a8a] focus:outline-none focus:ring-2 focus:ring-[#005bd3]/30 focus:border-[#005bd3] transition-shadow";
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-white mb-1">Portal Login</h1>
-          <p className="text-sm text-zinc-400">INFINITY PSR Internal CRM</p>
+  return (
+    <div className="min-h-screen bg-[#f1f1f1] flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
+        {/* Brand */}
+        <div className="flex items-center justify-center gap-2.5 mb-6">
+          <span className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-lg font-black shadow-sm">
+            I
+          </span>
+          <span className="text-[#1a1a1a] font-bold text-lg tracking-tight">INFINITY PSR</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              placeholder="you@example.com"
-              className="w-full bg-zinc-700 border border-zinc-600 text-white placeholder-zinc-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-zinc-400 transition-colors"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-2">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="••••••••"
-              className="w-full bg-zinc-700 border border-zinc-600 text-white placeholder-zinc-400 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-zinc-400 transition-colors"
-            />
-          </div>
-          {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3">
-              <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-white rounded-2xl border border-[#e3e3e3] shadow-sm p-7">
+          <h1 className="text-lg font-bold text-[#1a1a1a] mb-1">Log in</h1>
+          <p className="text-[13px] text-[#616161] mb-6">Continue to your dashboard</p>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div>
+              <label className="block text-[13px] font-medium text-[#303030] mb-1.5">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                placeholder="you@example.com"
+                className={inputCls}
+              />
             </div>
-          )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-white text-zinc-900 rounded-lg py-3 text-sm font-semibold hover:bg-zinc-100 transition-colors disabled:opacity-50 mt-1"
-          >
-            {loading ? "Signing in…" : "Sign In"}
-          </button>
-        </form>
+            <div>
+              <label className="block text-[13px] font-medium text-[#303030] mb-1.5">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                className={inputCls}
+              />
+            </div>
+            {error && (
+              <div className="bg-[#fedad9] border border-[#e0b3b2] rounded-lg px-3.5 py-2.5">
+                <p className="text-[13px] text-[#8e1f0b]">{error}</p>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#1a1a1a] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#303030] transition-colors disabled:opacity-50 mt-1 shadow-sm cursor-pointer"
+            >
+              {loading ? "Logging in…" : "Log in"}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-center text-xs text-[#8a8a8a] mt-4">ERP / CRM · Internal use only</p>
       </div>
     </div>
   );

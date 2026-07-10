@@ -54,7 +54,7 @@ interface ContactFormProps {
   };
 }
 
-const CURRENCIES = ["INR", "USD", "GBP", "EUR", "AED", "SGD", "AUD", "CAD", "JPY"];
+const CURRENCIES = ["CAD", "USD", "INR", "GBP", "EUR", "AED", "SGD", "AUD", "JPY"];
 const STATUSES = ["ACTIVE", "INACTIVE", "LEAD", "PROSPECT"];
 
 export function ContactForm({
@@ -91,7 +91,7 @@ export function ContactForm({
     website: initialData?.website ?? "",
     instagram: initialData?.instagram ?? "",
     linkedIn: initialData?.linkedIn ?? "",
-    currency: initialData?.currency ?? "INR",
+    currency: initialData?.currency ?? "CAD",
     notes: initialData?.notes ?? "",
     followUpDate: initialData?.followUpDate ?? "",
     followUpNote: initialData?.followUpNote ?? "",

@@ -47,13 +47,13 @@ const STAGES = [
   { key: "LOST", label: "Lost", color: "#ef4444" },
 ];
 
-const CURRENCIES = ["INR", "USD", "GBP", "EUR", "AED", "SGD", "AUD"];
+const CURRENCIES = ["CAD", "USD", "INR", "GBP", "EUR", "AED", "SGD", "AUD"];
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH"];
 
 function formatValue(value: number | null, currency: string) {
   if (!value) return null;
   const symbols: Record<string, string> = {
-    INR: "₹", USD: "$", GBP: "£", EUR: "€", AED: "AED ", SGD: "S$", AUD: "A$",
+    CAD: "$", USD: "US$", INR: "₹", GBP: "£", EUR: "€", AED: "AED ", SGD: "S$", AUD: "A$",
   };
   return `${symbols[currency] ?? currency + " "}${value.toLocaleString()}`;
 }
@@ -68,7 +68,7 @@ export function DealBoard({ initialDeals, industries, contacts, industrySlug }: 
     contactId: "",
     industryId: "",
     value: "",
-    currency: "INR",
+    currency: "CAD",
     stage: "LEAD",
     priority: "MEDIUM",
     notes: "",
@@ -108,7 +108,7 @@ export function DealBoard({ initialDeals, industries, contacts, industrySlug }: 
       });
       const deal = await res.json();
       setDeals((prev) => [deal, ...prev]);
-      setForm({ title: "", contactId: "", industryId: "", value: "", currency: "INR", stage: "LEAD", priority: "MEDIUM", notes: "" });
+      setForm({ title: "", contactId: "", industryId: "", value: "", currency: "CAD", stage: "LEAD", priority: "MEDIUM", notes: "" });
       setShowForm(false);
       router.refresh();
     } finally {

@@ -3,6 +3,12 @@ import { card } from "@/components/crm/ui";
 
 const SETTINGS = [
   {
+    href: "/crm/settings/store",
+    icon: "🛍️",
+    title: "Online Store",
+    desc: "Store name, tagline, WhatsApp number, and public contact details.",
+  },
+  {
     href: "/crm/settings/industries",
     icon: "🏭",
     title: "Industries",

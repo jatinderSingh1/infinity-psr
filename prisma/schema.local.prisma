@@ -205,6 +205,8 @@ model Product {
   unit        String      @default("pcs")
   currency    String      @default("CAD")
   isActive    Boolean     @default(true)
+  isPublic    Boolean     @default(false)
+  showPrice   Boolean     @default(true)
   industry    Industry?   @relation(fields: [industryId], references: [id])
   industryId  String?
   orderItems  OrderItem[]
@@ -227,9 +229,21 @@ model Order {
   amountPaid    Float       @default(0)
   currency      String      @default("CAD")
   notes         String?
+  publicToken   String?     @unique
+  confirmedAt   DateTime?
   items         OrderItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model StoreSetting {
+  id        String   @id @default("store")
+  storeName String   @default("Infinity Aura")
+  tagline   String?
+  whatsapp  String?
+  email     String?
+  about     String?
+  updatedAt DateTime @updatedAt
 }
 
 model OrderItem {

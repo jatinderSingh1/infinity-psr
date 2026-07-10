@@ -21,7 +21,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
   const body = await req.json();
-  const { name, sku, description, image, category, price, cost, stock, lowStockAt, unit, industryId, isActive } = body;
+  const { name, sku, description, image, category, price, cost, stock, lowStockAt, unit, industryId, isActive, isPublic, showPrice } = body;
 
   if (image && (typeof image !== "string" || !image.startsWith("data:image/") || image.length > 1_800_000)) {
     return NextResponse.json({ error: "Image is invalid or too large" }, { status: 400 });
@@ -42,6 +42,8 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       ...(unit !== undefined ? { unit: unit || "pcs" } : {}),
       ...(industryId !== undefined ? { industryId: industryId || null } : {}),
       ...(isActive !== undefined ? { isActive } : {}),
+      ...(isPublic !== undefined ? { isPublic } : {}),
+      ...(showPrice !== undefined ? { showPrice } : {}),
     },
   });
 

@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "INFINITY PSR — Global Talent Architecture",
-  description:
-    "Precision recruitment and talent architecture for world-class institutions.",
+  title: "Infinity Aura",
+  description: "Infinity Aura — products and services across textiles, watches, handicraft, real estate, staffing, and more.",
+  icons: { icon: "/logo.svg" },
 };
 
 export default function RootLayout({

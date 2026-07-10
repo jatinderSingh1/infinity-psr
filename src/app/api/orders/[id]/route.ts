@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { round2 } from "@/lib/format";
+import { randomBytes } from "crypto";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -67,6 +68,13 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
     const updated = await prisma.order.update({ where: { id }, data: { status: "CANCELLED" } });
     return NextResponse.json(updated);
+  }
+
+  if (action === "share") {
+    if (order.publicToken) return NextResponse.json({ token: order.publicToken });
+    const token = randomBytes(24).toString("base64url");
+    await prisma.order.update({ where: { id }, data: { publicToken: token } });
+    return NextResponse.json({ token });
   }
 
   if (action === "notes") {

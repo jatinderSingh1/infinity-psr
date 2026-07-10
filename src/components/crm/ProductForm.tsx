@@ -26,6 +26,8 @@ interface ProductFormProps {
     unit: string;
     industryId: string | null;
     isActive: boolean;
+    isPublic?: boolean;
+    showPrice?: boolean;
   };
 }
 
@@ -76,6 +78,8 @@ export function ProductForm({ industries, initialData }: ProductFormProps) {
     unit: initialData?.unit ?? "pcs",
     industryId: initialData?.industryId ?? "",
     isActive: initialData?.isActive ?? true,
+    isPublic: initialData?.isPublic ?? false,
+    showPrice: initialData?.showPrice ?? true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -292,6 +296,30 @@ export function ProductForm({ industries, initialData }: ProductFormProps) {
               <option value="active">Active</option>
               <option value="draft">Draft</option>
             </select>
+          </div>
+
+          <div className={`${card} p-4 space-y-3`}>
+            <h2 className={sectionTitle}>Online store</h2>
+            <label className="flex items-center gap-2 text-[13px] text-[#303030] cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.isPublic}
+                onChange={(e) => set("isPublic", e.target.checked)}
+                className="rounded"
+              />
+              Show in online store
+            </label>
+            {form.isPublic && (
+              <label className="flex items-center gap-2 text-[13px] text-[#303030] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.showPrice}
+                  onChange={(e) => set("showPrice", e.target.checked)}
+                  className="rounded"
+                />
+                Show price (unchecked = "Contact for price")
+              </label>
+            )}
           </div>
 
           <div className={`${card} p-4 space-y-3`}>

@@ -38,10 +38,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Brand */}
         <div className="flex items-center justify-center gap-2.5 mb-6">
-          <span className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-lg font-black shadow-sm">
-            I
-          </span>
-          <span className="text-[#1a1a1a] font-bold text-lg tracking-tight">INFINITY PSR</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="h-12 w-auto" />
+          <span className="text-[#1a1a1a] font-bold text-lg tracking-tight">INFINITY AURA</span>
         </div>
 
         <div className="bg-white rounded-2xl border border-[#e3e3e3] shadow-sm p-7">

@@ -1,147 +1,188 @@
+import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { getStoreSettings } from "@/lib/store";
+import { fmtMoney } from "@/lib/format";
+import { StoreHeader, StoreFooter } from "@/components/store/StoreShell";
 
-const sectors = [
-  "Healthcare & Pharmaceuticals",
-  "IT & Technology",
-  "Banking & Financial Services",
-  "Manufacturing",
-  "Real Estate",
-  "Education",
-  "Global Operations (BPO/KPO)",
-];
+export const dynamic = "force-dynamic";
 
-const pillars = [
-  {
-    title: "Structural Acquisition",
-    description:
-      "Scientific skill analysis to identify and place specialists and leaders who align with your organisational DNA.",
-  },
-  {
-    title: "Talent Velocity",
-    description:
-      "Predictive analytics to anticipate candidate availability and move faster than the market.",
-  },
-  {
-    title: "DNA Compatibility",
-    description:
-      "Deep cultural and behavioural matching to ensure long-term retention and organisational fit.",
-  },
-];
+export default async function StorefrontPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; category?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = sp.q ?? "";
+  const category = sp.category ?? "";
 
-export default function Home() {
+  const [settings, products, categoriesRaw, withImages] = await Promise.all([
+    getStoreSettings(),
+    prisma.product.findMany({
+      where: {
+        isActive: true,
+        isPublic: true,
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: "insensitive" } },
+                { description: { contains: q, mode: "insensitive" } },
+                { category: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(category ? { category } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        price: true,
+        currency: true,
+        showPrice: true,
+        stock: true,
+      },
+    }),
+    prisma.product.findMany({
+      where: { isActive: true, isPublic: true, category: { not: null } },
+      select: { category: true },
+      distinct: ["category"],
+    }),
+    prisma.product.findMany({
+      where: { isActive: true, isPublic: true, image: { not: null } },
+      select: { id: true },
+    }),
+  ]);
+
+  const imageIds = new Set(withImages.map((p) => p.id));
+  const categories = categoriesRaw.map((c) => c.category!).sort();
+
   return (
-    <div className="min-h-screen bg-white text-zinc-900 font-sans">
-      {/* Nav */}
-      <header className="fixed top-0 w-full z-50 bg-white/90 backdrop-blur border-b border-zinc-100">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="font-bold text-lg tracking-tight">INFINITY PSR</span>
-          <nav className="hidden md:flex gap-8 text-sm text-zinc-600">
-            <a href="#methodology" className="hover:text-zinc-900 transition-colors">Methodology</a>
-            <a href="#sectors" className="hover:text-zinc-900 transition-colors">Sectors</a>
-            <a href="#contact" className="hover:text-zinc-900 transition-colors">Contact</a>
-          </nav>
-          <Link
-            href="/login"
-            className="text-sm bg-zinc-900 text-white px-4 py-2 rounded-lg hover:bg-zinc-700 transition-colors"
-          >
-            Portal Login
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-white text-[#1a1a1a] flex flex-col">
+      <StoreHeader storeName={settings.storeName} />
 
-      {/* Hero */}
-      <section className="pt-32 pb-24 px-6 max-w-6xl mx-auto">
-        <div className="max-w-3xl">
-          <p className="text-sm font-medium text-zinc-500 uppercase tracking-widest mb-4">
-            Est. 2024 · Global Operations
-          </p>
-          <h1 className="text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-            Global Talent Architecture<br />
-            <span className="text-zinc-400">for World-Class Institutions</span>
-          </h1>
-          <p className="text-lg text-zinc-600 leading-relaxed mb-10 max-w-xl">
-            We don&apos;t just recruit. We architect precision talent strategies that
-            drive long-term organisational success across seven global sectors.
-          </p>
-          <div className="flex gap-4 flex-wrap">
-            <a
-              href="#contact"
-              className="bg-zinc-900 text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-zinc-700 transition-colors"
-            >
-              Start a Search
-            </a>
-            <a
-              href="#methodology"
-              className="border border-zinc-200 text-zinc-700 px-6 py-3 rounded-lg text-sm font-medium hover:bg-zinc-50 transition-colors"
-            >
-              Our Methodology
-            </a>
-          </div>
-        </div>
-      </section>
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4">
+        {/* Hero */}
+        <section className="text-center pt-12 pb-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="h-20 w-auto mx-auto mb-4" />
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">{settings.storeName}</h1>
+          {settings.tagline && <p className="text-[#616161] max-w-xl mx-auto">{settings.tagline}</p>}
+        </section>
 
-      {/* Methodology */}
-      <section id="methodology" className="py-24 px-6 bg-zinc-50">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-sm font-medium text-zinc-500 uppercase tracking-widest mb-3">
-            Our Approach
-          </p>
-          <h2 className="text-3xl font-bold mb-12">The Three-Pillar Framework</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            {pillars.map((p) => (
-              <div key={p.title} className="bg-white rounded-xl p-8 border border-zinc-100">
-                <div className="w-8 h-8 bg-zinc-900 rounded-lg mb-5" />
-                <h3 className="font-semibold text-lg mb-3">{p.title}</h3>
-                <p className="text-zinc-600 text-sm leading-relaxed">{p.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Sectors */}
-      <section id="sectors" className="py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-sm font-medium text-zinc-500 uppercase tracking-widest mb-3">
-            Sector Specialisation
-          </p>
-          <h2 className="text-3xl font-bold mb-12">Industries We Serve</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {sectors.map((s) => (
-              <div
-                key={s}
-                className="border border-zinc-100 rounded-xl px-5 py-4 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+        {/* Search + categories */}
+        <section className="mb-8">
+          <form method="GET" className="max-w-lg mx-auto mb-4 flex gap-2">
+            <input
+              name="q"
+              defaultValue={q}
+              placeholder="Search products…"
+              className="flex-1 border border-[#d4d4d4] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#005bd3]/30 focus:border-[#005bd3]"
+            />
+            {category && <input type="hidden" name="category" value={category} />}
+            <button type="submit" className="bg-[#1a1a1a] text-white rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-[#303030] transition-colors cursor-pointer">
+              Search
+            </button>
+          </form>
+          {categories.length > 0 && (
+            <div className="flex gap-2 flex-wrap justify-center">
+              <Link
+                href={q ? `/?q=${encodeURIComponent(q)}` : "/"}
+                className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${
+                  !category
+                    ? "bg-[#1a1a1a] text-white border-[#1a1a1a]"
+                    : "bg-white text-[#303030] border-[#d4d4d4] hover:border-[#8a8a8a]"
+                }`}
               >
-                {s}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+                All
+              </Link>
+              {categories.map((c) => (
+                <Link
+                  key={c}
+                  href={`/?category=${encodeURIComponent(c)}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+                  className={`px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${
+                    category === c
+                      ? "bg-[#1a1a1a] text-white border-[#1a1a1a]"
+                      : "bg-white text-[#303030] border-[#d4d4d4] hover:border-[#8a8a8a]"
+                  }`}
+                >
+                  {c}
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
-      {/* Contact */}
-      <section id="contact" className="py-24 px-6 bg-zinc-900 text-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-8">
-          <div>
-            <h2 className="text-3xl font-bold mb-3">Ready to Build Your Team?</h2>
-            <p className="text-zinc-400 text-sm">
-              Reach out and a talent architect will respond within 24 hours.
+        {/* Product grid */}
+        {products.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-4xl mb-3">🛍️</p>
+            <p className="font-semibold mb-1">
+              {q || category ? "No products match your search" : "Our catalog is coming soon"}
             </p>
+            <p className="text-sm text-[#616161] mb-4">
+              {q || category ? (
+                <Link href="/" className="text-[#005bd3] hover:underline">Clear search</Link>
+              ) : (
+                "In the meantime, reach out — we probably have what you need."
+              )}
+            </p>
+            <Link
+              href="/contact"
+              className="inline-block bg-[#1a1a1a] text-white rounded-xl px-5 py-2.5 text-sm font-semibold hover:bg-[#303030] transition-colors"
+            >
+              Get in touch
+            </Link>
           </div>
-          <div className="flex flex-col gap-3 text-sm">
-            <a href="mailto:contact@infinitypsr.com" className="text-zinc-300 hover:text-white transition-colors">
-              contact@infinitypsr.com
-            </a>
-            <a href="tel:+1234567890" className="text-zinc-300 hover:text-white transition-colors">
-              +1 (234) 567-890
-            </a>
-          </div>
-        </div>
-      </section>
+        ) : (
+          <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 pb-8">
+            {products.map((p) => (
+              <Link
+                key={p.id}
+                href={`/p/${p.id}`}
+                className="group border border-[#ebebeb] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#d4d4d4] transition-all bg-white"
+              >
+                <div className="aspect-square bg-[#f7f7f7] flex items-center justify-center overflow-hidden">
+                  {imageIds.has(p.id) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/public/product-image/${p.id}`}
+                      alt={p.name}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <span className="text-4xl opacity-40">🛍️</span>
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium text-[#1a1a1a] leading-snug line-clamp-2">{p.name}</p>
+                  <p className="text-sm mt-1">
+                    {p.showPrice ? (
+                      <span className="font-semibold">{fmtMoney(p.price, p.currency)}</span>
+                    ) : (
+                      <span className="text-[#616161]">Contact for price</span>
+                    )}
+                  </p>
+                  {p.stock <= 0 && (
+                    <p className="text-xs text-[#8e1f0b] mt-0.5">Out of stock</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </section>
+        )}
 
-      <footer className="py-6 px-6 border-t border-zinc-100 text-center text-xs text-zinc-400">
-        © {new Date().getFullYear()} INFINITY PSR. All rights reserved.
-      </footer>
+        {/* About */}
+        {settings.about && (
+          <section className="border-t border-[#ebebeb] py-10 text-center">
+            <h2 className="font-bold text-lg mb-2">About us</h2>
+            <p className="text-sm text-[#616161] max-w-2xl mx-auto whitespace-pre-wrap">{settings.about}</p>
+          </section>
+        )}
+      </main>
+
+      <StoreFooter storeName={settings.storeName} email={settings.email} />
     </div>
   );
 }

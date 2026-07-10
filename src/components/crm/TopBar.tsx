@@ -106,11 +106,10 @@ export function TopBar({
 
         {/* Brand */}
         <Link href="/crm" className="flex items-center gap-2 flex-shrink-0">
-          <span className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center text-white text-sm font-black">
-            I
-          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="" className="h-8 w-auto" />
           <span className="text-white font-bold text-sm tracking-tight hidden sm:block">
-            INFINITY PSR
+            INFINITY AURA
           </span>
         </Link>
 

@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { name, sku, description, image, category, price, cost, stock, lowStockAt, unit, industryId, isActive } = body;
+  const { name, sku, description, image, category, price, cost, stock, lowStockAt, unit, industryId, isActive, isPublic, showPrice } = body;
 
   if (!name) return NextResponse.json({ error: "Product name is required" }, { status: 400 });
   if (image && (typeof image !== "string" || !image.startsWith("data:image/") || image.length > 1_800_000)) {
@@ -61,6 +61,8 @@ export async function POST(req: Request) {
       unit: unit || "pcs",
       industryId: industryId || null,
       isActive: isActive ?? true,
+      isPublic: isPublic ?? false,
+      showPrice: showPrice ?? true,
     },
   });
 

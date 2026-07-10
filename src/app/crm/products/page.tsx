@@ -41,6 +41,7 @@ export default async function ProductsPage({
         unit: true,
         currency: true,
         isActive: true,
+        isPublic: true,
         industry: { select: { name: true, icon: true } },
       },
     }),
@@ -144,7 +145,10 @@ export default async function ProductsPage({
                         </div>
                       </td>
                       <td className={tdCls}>
-                        {p.isActive ? <Badge tone="success">Active</Badge> : <Badge>Draft</Badge>}
+                        <span className="inline-flex gap-1">
+                          {p.isActive ? <Badge tone="success">Active</Badge> : <Badge>Draft</Badge>}
+                          {p.isPublic && <Badge tone="info">🌐 In store</Badge>}
+                        </span>
                       </td>
                       <td className={tdCls}>
                         <span className={out ? "text-[#8e1f0b] font-medium" : low ? "text-[#8a6116] font-medium" : ""}>

@@ -41,11 +41,40 @@ export function OrderActions({ id, status, paymentStatus, total, amountPaid }: P
     }
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const copyLink = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/orders/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "share" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Could not create link");
+      const url = `${window.location.origin}/i/${data.token}`;
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const cancelled = status === "CANCELLED";
 
   return (
     <div className="flex flex-col items-end gap-2">
       <div className="flex items-center gap-2 flex-wrap justify-end">
+        {!cancelled && (
+          <button onClick={copyLink} disabled={busy} className={btnSecondary}>
+            {copied ? "✓ Link copied!" : "Copy customer link"}
+          </button>
+        )}
         {!cancelled && paymentStatus !== "PAID" && !showPay && (
           <button onClick={() => setShowPay(true)} className={btnPrimary}>
             Record payment

@@ -196,6 +196,7 @@ model Product {
   name        String
   sku         String?
   description String?
+  image       String?
   category    String?
   price       Float       @default(0)
   cost        Float?

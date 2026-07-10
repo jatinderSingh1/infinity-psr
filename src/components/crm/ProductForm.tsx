@@ -17,6 +17,7 @@ interface ProductFormProps {
     name: string;
     sku: string | null;
     description: string | null;
+    image?: string | null;
     category: string | null;
     price: number;
     cost: number | null;
@@ -28,6 +29,36 @@ interface ProductFormProps {
   };
 }
 
+// Downscale to max 800px and re-encode as JPEG so uploads stay small
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const max = 800;
+      let { width, height } = img;
+      if (width > max || height > max) {
+        const scale = Math.min(max / width, max / height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return reject(new Error("Canvas not supported"));
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("Could not read image"));
+    };
+    img.src = url;
+  });
+}
+
 export function ProductForm({ industries, initialData }: ProductFormProps) {
   const router = useRouter();
   const isEdit = !!initialData;
@@ -36,6 +67,7 @@ export function ProductForm({ industries, initialData }: ProductFormProps) {
     name: initialData?.name ?? "",
     sku: initialData?.sku ?? "",
     description: initialData?.description ?? "",
+    image: initialData?.image ?? "",
     category: initialData?.category ?? "",
     price: initialData?.price?.toString() ?? "",
     cost: initialData?.cost?.toString() ?? "",
@@ -54,6 +86,23 @@ export function ProductForm({ industries, initialData }: ProductFormProps) {
 
   const set = (key: keyof typeof form, val: string | boolean) =>
     setForm((f) => ({ ...f, [key]: val }));
+
+  const handleImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("Please choose an image file (JPG, PNG, WebP…)");
+      return;
+    }
+    try {
+      const dataUrl = await compressImage(file);
+      set("image", dataUrl);
+      setError("");
+    } catch {
+      setError("Could not process that image — try a different file.");
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,6 +167,40 @@ export function ProductForm({ industries, initialData }: ProductFormProps) {
                 className={`${inputCls} resize-none`}
               />
             </div>
+          </div>
+
+          <div className={`${card} p-4`}>
+            <h2 className={`${sectionTitle} mb-3`}>Media</h2>
+            {form.image ? (
+              <div className="flex items-start gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={form.image}
+                  alt="Product"
+                  className="w-32 h-32 rounded-xl object-cover border border-[#e3e3e3]"
+                />
+                <div className="flex flex-col gap-2">
+                  <label className={`${btnSecondary} cursor-pointer`}>
+                    Replace image
+                    <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => set("image", "")}
+                    className={btnDanger}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[#d4d4d4] rounded-xl py-8 cursor-pointer hover:border-[#8a8a8a] hover:bg-[#fafafa] transition-colors">
+                <span className="text-2xl">🖼️</span>
+                <span className="text-[13px] font-medium text-[#005bd3]">Upload image</span>
+                <span className="text-xs text-[#8a8a8a]">JPG, PNG or WebP — resized automatically</span>
+                <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
+              </label>
+            )}
           </div>
 
           <div className={`${card} p-4`}>

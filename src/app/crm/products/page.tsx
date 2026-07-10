@@ -13,7 +13,7 @@ export default async function ProductsPage({
   const category = sp.category ?? "";
   const status = sp.status ?? "";
 
-  const [products, categories] = await Promise.all([
+  const [products, categories, withImages] = await Promise.all([
     prisma.product.findMany({
       where: {
         AND: [
@@ -30,14 +30,31 @@ export default async function ProductsPage({
         ],
       },
       orderBy: { createdAt: "desc" },
-      include: { industry: { select: { name: true, icon: true } } },
+      select: {
+        id: true,
+        name: true,
+        sku: true,
+        category: true,
+        price: true,
+        stock: true,
+        lowStockAt: true,
+        unit: true,
+        currency: true,
+        isActive: true,
+        industry: { select: { name: true, icon: true } },
+      },
     }),
     prisma.product.findMany({
       where: { category: { not: null } },
       select: { category: true },
       distinct: ["category"],
     }),
+    prisma.product.findMany({
+      where: { image: { not: null } },
+      select: { id: true },
+    }),
   ]);
+  const imageIds = new Set(withImages.map((p) => p.id));
 
   return (
     <div className="p-5 max-w-[1050px] mx-auto">
@@ -104,10 +121,27 @@ export default async function ProductsPage({
                   return (
                     <tr key={p.id} className="hover:bg-[#fafafa] transition-colors">
                       <td className={tdCls}>
-                        <Link href={`/crm/products/${p.id}/edit`} className="font-medium text-[#1a1a1a] hover:underline">
-                          {p.name}
-                        </Link>
-                        {p.sku && <p className="text-xs text-[#8a8a8a]">{p.sku}</p>}
+                        <div className="flex items-center gap-3">
+                          {imageIds.has(p.id) ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={`/api/products/${p.id}/image`}
+                              alt=""
+                              loading="lazy"
+                              className="w-10 h-10 rounded-lg object-cover border border-[#e3e3e3] flex-shrink-0"
+                            />
+                          ) : (
+                            <span className="w-10 h-10 rounded-lg bg-[#f1f1f1] border border-[#e3e3e3] flex items-center justify-center text-base flex-shrink-0">
+                              📦
+                            </span>
+                          )}
+                          <div>
+                            <Link href={`/crm/products/${p.id}/edit`} className="font-medium text-[#1a1a1a] hover:underline">
+                              {p.name}
+                            </Link>
+                            {p.sku && <p className="text-xs text-[#8a8a8a]">{p.sku}</p>}
+                          </div>
+                        </div>
                       </td>
                       <td className={tdCls}>
                         {p.isActive ? <Badge tone="success">Active</Badge> : <Badge>Draft</Badge>}

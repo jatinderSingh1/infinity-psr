@@ -20,6 +20,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   if (!order) notFound();
 
+  const productIds = order.items.map((i) => i.productId).filter(Boolean) as string[];
+  const withImages = productIds.length
+    ? await prisma.product.findMany({
+        where: { id: { in: productIds }, image: { not: null } },
+        select: { id: true },
+      })
+    : [];
+  const imageIds = new Set(withImages.map((p) => p.id));
+
   const balance = round2(order.total - order.amountPaid);
   const c = order.contact;
 
@@ -57,9 +66,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <div className="divide-y divide-[#f1f1f1]">
               {order.items.map((it) => (
                 <div key={it.id} className="px-4 py-3 flex items-center gap-3">
-                  <span className="w-9 h-9 rounded-lg bg-[#f1f1f1] border border-[#e3e3e3] flex items-center justify-center text-base flex-shrink-0">
-                    📦
-                  </span>
+                  {it.productId && imageIds.has(it.productId) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={`/api/products/${it.productId}/image`}
+                      alt=""
+                      loading="lazy"
+                      className="w-9 h-9 rounded-lg object-cover border border-[#e3e3e3] flex-shrink-0"
+                    />
+                  ) : (
+                    <span className="w-9 h-9 rounded-lg bg-[#f1f1f1] border border-[#e3e3e3] flex items-center justify-center text-base flex-shrink-0">
+                      📦
+                    </span>
+                  )}
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium text-[#1a1a1a]">{it.title}</p>
                     <p className="text-xs text-[#8a8a8a]">

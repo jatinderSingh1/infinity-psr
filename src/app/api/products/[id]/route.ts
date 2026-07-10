@@ -21,7 +21,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   const { id } = await params;
   const body = await req.json();
-  const { name, sku, description, category, price, cost, stock, lowStockAt, unit, industryId, isActive } = body;
+  const { name, sku, description, image, category, price, cost, stock, lowStockAt, unit, industryId, isActive } = body;
+
+  if (image && (typeof image !== "string" || !image.startsWith("data:image/") || image.length > 1_800_000)) {
+    return NextResponse.json({ error: "Image is invalid or too large" }, { status: 400 });
+  }
 
   const product = await prisma.product.update({
     where: { id },
@@ -29,6 +33,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       ...(name !== undefined ? { name } : {}),
       ...(sku !== undefined ? { sku: sku || null } : {}),
       ...(description !== undefined ? { description: description || null } : {}),
+      ...(image !== undefined ? { image: image || null } : {}),
       ...(category !== undefined ? { category: category || null } : {}),
       ...(price !== undefined ? { price: Number(price) || 0 } : {}),
       ...(cost !== undefined ? { cost: cost === "" || cost === null ? null : Number(cost) } : {}),
